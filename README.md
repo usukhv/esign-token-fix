@@ -127,7 +127,13 @@ defaults read /Library/Preferences/com.apple.security.smartcard
 
 # 6. APDU түвшний алдааг live харах (eSign ажиллуулж байх үед)
 /usr/bin/log stream --predicate 'subsystem == "com.apple.CryptoTokenKit"' --style compact
+
+# 7. PKCS#11 түвшний бүрэн оношлогоо (энэ repo-гийн tool)
+python3 p11test.py
 ```
+
+`p11test.py` нь libcastle-ээр дамжуулан токены slot, label, сертификатыг шалгаж,
+`CKR_GENERAL_ERROR` (Apple драйверын асуудал) эсэхийг шууд хэлж өгнө.
 
 ---
 
