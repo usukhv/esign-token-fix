@@ -5,16 +5,27 @@
 echo "🔑 eSign токен идэвхжүүлж байна..."
 echo ""
 
-# Reader нэр нь "FT ePass2003Auto" эсвэл "HYPERSECU USB TOKEN" гэж танигддаг
+# Reader нэр аль драйвер идэвхтэйг заана:
+#   FT ePass2003Auto    → FeiTian IFD драйвер, бүрэн ажиллана
+#   HYPERSECU USB TOKEN → Apple CCID драйвер, SM APDU гээгдэнэ (eSign ажиллахгүй)
 READER_PATTERN="ePass|FT.*Auto|HYPERSECU"
 
-reader_active() {
-  system_profiler SPSmartCardsDataType 2>/dev/null | grep -qiE "$READER_PATTERN"
+readers() {
+  system_profiler SPSmartCardsDataType 2>/dev/null | sed -n '/Readers:/,/Reader Drivers:/p'
 }
 
-# Mode 2 үед CD mount-тай атлаа reader аль хэдийн идэвхтэй байдаг тул
-# эхлээд reader-ийг шалгана — идэвхтэй бол eject хийх шаардлагагүй.
-if reader_active; then
+reader_active() {
+  readers | grep -qiE "$READER_PATTERN"
+}
+
+if readers | grep -qi "HYPERSECU"; then
+  echo "⚠️  Reader 'HYPERSECU USB TOKEN' нэрээр танигдсан — Apple-ийн CCID драйвер"
+  echo "   барьж байгаа тул eSign ажиллахгүй. FeiTian драйверыг идэвхжүүлнэ үү:"
+  echo ""
+  echo "   sudo defaults write /Library/Preferences/com.apple.security.smartcard useIFDCCID -bool yes"
+  echo ""
+  echo "   Дараа нь токеноо салгаж дахин залгаад энэ script-ийг ажиллуулна уу."
+elif reader_active; then
   echo "✅ Токен аль хэдийн идэвхтэй байна! eSign руугаа орж 'Дахин оролдох' дарна уу."
 else
   # CD_ROM_Mode дээр байгаа HyperPKI диск олох
